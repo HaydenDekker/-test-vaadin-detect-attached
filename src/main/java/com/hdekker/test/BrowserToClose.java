@@ -1,6 +1,7 @@
 package com.hdekker.test;
 
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -20,16 +21,16 @@ public class BrowserToClose extends VerticalLayout implements AfterNavigationObs
 	@Autowired
 	UIReferenceManager uiRef;
 	
-	Boolean clientIsResponding = false;
+	Boolean clientHasResponding = false;
 	
 	@ClientCallable
-    public void receivePresenceCheck() {
-		clientIsResponding = true;
+    private void receivePresenceCheck() {
+		clientHasResponding = true;
     }
 	
-	public void checkIfPresent() {
+	private void checkIfPresent() {
 		
-		clientIsResponding = false;
+		clientHasResponding = false;
 		UI ui = this.getUI().get();
 		ui.access(()->{
 			 getElement().executeJs("this.$server.receivePresenceCheck()", "");
@@ -38,16 +39,40 @@ public class BrowserToClose extends VerticalLayout implements AfterNavigationObs
 	   
 	}
 	
+	public void isComponentReachable(Runnable canReach, Runnable unreachable) {
+		
+		checkIfPresent();
+		CompletableFuture.runAsync(()->{
+			
+			int numOfAttempts = 10;
+			int timemsBetweenAttempts = 1000;
+			for(int i = 0; i < numOfAttempts; i++) {
+				if(clientHasResponding) {
+					canReach.run();
+					return;
+				} else {
+
+				}
+				try {
+					Thread.sleep(timemsBetweenAttempts);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			unreachable.run();
+		});
+		
+	}
+	
 	public BrowserToClose() {
 		add(new Label("Open Browser to attempt connection first, then close"));
 	}
 
 	@Override
 	public void afterNavigation(AfterNavigationEvent event) {
-		uiRef.uiToDetectPresence = Optional.of(() -> clientIsResponding);
-		uiRef.checkForPresence = Optional.of(() -> {
-			checkIfPresent();
-		});
+		
+		uiRef.isComponentAttachedConsumer = Optional.of(this::isComponentReachable);
 		
 	}
 	

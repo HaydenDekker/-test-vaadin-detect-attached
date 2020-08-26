@@ -1,6 +1,7 @@
 package com.hdekker.test;
 
 import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -13,8 +14,5 @@ import com.vaadin.flow.spring.annotation.VaadinSessionScope;
 @VaadinSessionScope
 public class UIReferenceManager { 
 
-	public Optional<Supplier<Boolean>> uiToDetectPresence = Optional.empty();
-
-	public Optional<Runnable> checkForPresence = Optional.empty();
-	
+	public Optional<BiConsumer<Runnable, Runnable>> isComponentAttachedConsumer = Optional.empty();
 }

@@ -28,8 +28,6 @@ public class BrowserToAttemptConnect extends VerticalLayout implements AfterNavi
 	
 	Button checkIfThere = new Button("Check if there");
 	
-	Button receiveStatus = new Button("ReceiveStatus");
-	
 	TextField tf = new TextField("Is attached");
 	
 	@Override
@@ -37,18 +35,31 @@ public class BrowserToAttemptConnect extends VerticalLayout implements AfterNavi
 		
 		checkIfThere.addClickListener((e)-> {
 			
-			refManager.checkForPresence.ifPresent((presenceCheckingFunction)-> presenceCheckingFunction.run());
+			refManager.isComponentAttachedConsumer.ifPresent((checker)->{
+				
+				checker.accept(()->{	
+					tf.getUI().get().access(()->{
+						
+						tf.setValue("true");
+						tf.getUI().get().push();
+						
+					});		
+				}, ()->{			
+					tf.getUI().get().access(()->{
+						
+						tf.setValue("false");
+						tf.getUI().get().push();
+						
+					});		
+				});
+				
+				
+			});
 			
 			
 		});
 		
-		receiveStatus.addClickListener((e)->{
-			refManager.uiToDetectPresence.ifPresent((isPresentSupplier)-> 
-					tf.setValue(new Boolean(isPresentSupplier.get()).toString())
-			);
-		});
-		
-		add(uiNum, checkIfThere,receiveStatus, tf);
+		add(uiNum, checkIfThere, tf);
 	}
 	
 }
